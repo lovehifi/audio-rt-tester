@@ -1,4 +1,4 @@
-````markdown
+
 # Audio RT Tester GUI for Volumio
 
 A simple web-based GUI for running real-time audio latency tests on your Volumio device.
