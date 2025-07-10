@@ -12,7 +12,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
      git clone https://github.com/volumio/build-platform-x64.git
      cd build-platform-x64
      ```
-  2. Build and install a PREEMPT_RT–patched kernel (e.g. 6.12.y) following the README.  
+  2. Build and install a PREEMPT_RT kernel.  
   3. Reboot into your new kernel and verify:  
      ```bash
      uname -a
