@@ -1,25 +1,3 @@
-# Audio RT Tester GUI for Volumio
-
-A simple web-based GUI for running real-time audio latency tests on your Volumio device.
-
-## Prerequisites
-
-- Volumio
-- Git
-
-## Installation
-
-SSH into your Volumio device and run:
-
-```bash
-sudo mkdir -p /srv/node
-sudo chown volumio:volumio /srv/node
-cd /srv/node
-git clone https://github.com/lovehifi/audio-rt-tester
-cd audio-rt-tester
-npm install
-
-
 ````markdown
 # Audio RT Tester GUI for Volumio
 
@@ -27,7 +5,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
 
 ## Prerequisites
 
-- Volumio (any recent release)  
+- Volumio  
 - Node.js (v18 or newer)  
 - Git
 
@@ -87,5 +65,5 @@ http://<VOLIMIO_HOST_OR_IP>:3003
 
 You’ll see controls to launch `cyclictest` and `jitterdebugger`, live graphs of latency, and options to download raw logs.
 
-
+```
 ```
