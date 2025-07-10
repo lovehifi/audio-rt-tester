@@ -3,10 +3,23 @@
 
 A simple web-based GUI for running real-time audio latency tests on your Volumio device.
 
+
 ## Prerequisites
 
-- Volumio  
-- Git
+- **Volumio with real-time kernel**  
+  1. Clone Volumio’s build scripts and platform repo:  
+     ```bash
+     git clone https://github.com/volumio/build-platform-x64.git
+     cd build-platform-x64
+     ```
+  2. Build and install a PREEMPT_RT–patched kernel (e.g. 6.12.y) following the README.  
+  3. Reboot into your new kernel and verify:  
+     ```bash
+     uname -a
+     # → Linux volumio 6.12.36-volumio-1 #1 SMP PREEMPT_RT ...
+     ```  
+     **Must** show `PREEMPT_RT`, not `PREEMPT_DYNAMIC` or unpatched.
+
 
 ## Installation
 
