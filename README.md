@@ -1,8 +1,10 @@
+I’ve long been curious about real-time audio and have tried various real-time OS configurations on Raspberry Pi 4, Raspberry Pi 5, and x64 PCs. My listening experience differed noticeably between platforms, which led me to dig into Volumio’s real-time capabilities. Documentation on Volumio real-time is scarce, but I did come across a few interesting resources—an experimental real-time kernel discussion on the Volumio forum (https://community.volumio.com/t/volumio-for-raspberry-pi-with-experimental-real-time-kernel/7337/2) and the rpi-usb-audio-tweaks repository (https://github.com/maniac0r/rpi-usb-audio-tweaks).
+
+To make it easier to verify and visualize audio latency under Volumio’s real-time kernel, I created a simple web-based GUI:
 
 # Audio RT Tester GUI for Volumio
 
 A simple web-based GUI for running real-time audio latency tests on your Volumio device.
-
 
 ## Prerequisites
 
