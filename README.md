@@ -53,8 +53,6 @@ if ! command -v jitterdebugger &> /dev/null; then
     cd jitter-debugger
     make
     sudo install -m 0755 jitterdebugger /usr/local/bin/
-    cd ..
-    rm -rf jitter-debugger
   }
 fi
 ```
