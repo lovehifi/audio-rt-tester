@@ -1,1 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Real-Time Kernel Web Test Tool</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { font-family: Inter, Arial, sans-serif; background: #181f27; color: #fff; }
+    .container-col { max-width: 1200px; margin: 30px auto; display: flex; flex-direction: column; gap: 44px; }
+    .card {
+      background: #232c3d; border-radius: 18px; padding: 30px 28px 28px 28px; box-shadow: 0 6px 32px #0003;
+      width: 100%; max-width: none; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;
+    }
+    h1 { text-align: center; font-weight: 700; font-size: 2.1em; margin-bottom: 24px; }
+    h2 { font-size: 1.22em; font-weight: 600; margin-bottom: 3px; }
+    label { display: block; margin: 7px 0 2px 0; color: #b1c9ff; font-size: 1em; }
+    input, select {
+      width: 100%; max-width: 170px; padding: 7px 10px; margin-bottom: 6px; border-radius: 7px;
+      border: 1px solid #434d60; background: #232c3d; color: #fff; font-size: 1em; display:inline-block;
+    }
+    .inline-group {display: flex; flex-wrap: wrap; gap:18px; width:100%;}
+    .inline-group > div { flex: 1 1 0; min-width: 160px;}
+    button {
+      padding: 12px 28px; background: #2ccfa7; border: none; border-radius: 9px; font-size: 1.08em; color: #fff;
+      font-weight: 600; margin-top: 10px; cursor: pointer; transition: background 0.2s;
+    }
+    button:disabled { background: #444; }
+    .chart-box {
+      background: #fff; border-radius: 12px; padding: 20px 18px 16px 18px;
+      margin: 26px auto 10px auto; box-sizing: border-box;
+      width: 100%; max-width: 99vw; min-width: 320px; display: flex; flex-direction: column; align-items: center;
+    }
+    table { color: #1a1c21; margin-top: 8px; border-collapse: collapse; width: 100%; background: #fff; border-radius: 8px;}
+    th, td { padding: 7px 12px; text-align: center; font-size: 1.08em;}
+    th { background: #2ccfa7; color: #fff; }
+    tr:nth-child(even) { background: #e8f6f2; }
+    .status { color: #ffd23a; margin-bottom: 8px; min-height: 18px; }
+    .download { margin-top: 7px; display: block; color: #32ccff; }
+    .note {
+      font-size: 1.12em; background: #212735; color: #f8faff; border-radius: 12px; padding: 17px 26px; margin: 14px auto 24px auto;
+      max-width: 1150px; line-height: 1.68; border-left: 5px solid #2ccfa7;
+    }
+    .note b { color: #2ccfa7; }
+    .toggle-bar { display: flex; gap: 16px; align-items: center; margin: 5px 0 10px 0; }
+    .toggle-bar select { max-width: 150px; }
+    .warning { color: #ff5570; font-size: 1.08em; font-weight: bold; }
+    #jitter-chartbox, #cyclic-chartbox { width: 100%; }
+    .plotly-chart { width: 99%; min-height: 420px; height: 450px; }
+    @media (max-width: 950px) {
+      .container-col { max-width: 99vw;}
+      .card {padding: 16px 3vw;}
+      .chart-box {max-width:99vw;}
+    }
+    @media (max-width: 650px) { .inline-group { flex-direction: column; gap:8px;} }
+  </style>
+</head>
+<body>
+  <h1>Audio Real-Time Kernel Web Test Tool</h1>
+  <div class="note">
+    <b>How to use:</b><br>
+	• <b>Play music</b><br>
+    • <b>Cyclictest</b> (top): Benchmark kernel audio real-time latency. Quick mode = only summary, Detail mode = more parameters.<br>
+    • <b>Jitterdebugger</b> (bottom): Shows block-by-block real-time trend for each core (default). You can switch to histogram/boxplot.<br>
+    • <b>Customize all test parameters</b>, run and compare results. <b>Tip:</b> Use all cores (0-3) for full system check.<br>
+    • <b>Line chart (trend)</b> for jitterdebugger is recommended for spotting spikes/RT issues.
+  </div>
+  <div class="container-col">
+    <!-- Cyclictest card -->
+    <div class="card">
+      <h2>cyclictest</h2>
+      <div class="toggle-bar">
+        <label>Mode:</label>
+        <select id="cyclic-mode">
+          <option value="quick">Quick Test (summary)</option>
+          <option value="detail">Detail Test (summary)</option>
+        </select>
+      </div>
+      <form id="cyclic-form">
+        <div class="inline-group">
+          <div><label>CPU cores:</label><input id="cyclic-cores" value="0-3"></div>
+          <div><label>Interval (µs):</label><input id="cyclic-interval" value="250"></div>
+          <div><label>Loops:</label><input id="cyclic-loops" value="200000"></div>
+          <div><label>Priority:</label><input id="cyclic-priority" value="99"></div>
+        </div>
+        <div id="cyclic-detail-extra" style="display:none;">
+          <div class="inline-group">
+            <div><label>Policy:</label>
+              <select id="cyclic-policy"><option value="rr">rr</option><option value="fifo">fifo</option></select>
+            </div>
+            <div><label>Histogram bins:</label><input id="cyclic-histogram" value="400"></div>
+            <div><label>Threads:</label><input id="cyclic-threads" value="4"></div>
+          </div>
+        </div>
+        <button type="submit">Run cyclictest</button>
+      </form>
+      <div class="status" id="cyclic-status"></div>
+      <div class="chart-box" style="display:none;" id="cyclic-chartbox">
+        <div class="summary" id="cyclic-summary"></div>
+        <a class="download" id="cyclic-download" href="#" download style="display:none;">Download log</a>
+      </div>
+    </div>
+    <!-- Jitterdebugger card, full width -->
+    <div class="card">
+      <h2>jitterdebugger</h2>
+      <form id="jitter-form">
+        <div class="inline-group">
+          <div><label>CPU cores:</label><input id="jitter-cores" value="0-3"></div>
+          <div><label>Loops:</label><input id="jitter-loops" value="30000"></div>
+        </div>
+        <div class="toggle-bar">
+          <select id="jitter-chart-type">
+            <option value="trend" selected>Block trend (line)</option>
+          </select>
+          <label>Field:</label>
+          <select id="jitter-field">
+            <option value="max">Max</option>
+            <option value="avg">Avg</option>
+            <option value="min">Min</option>
+          </select>
+        </div>
+        <button type="submit">Run jitterdebugger</button>
+      </form>
+      <div class="status" id="jitter-status"></div>
+      <div class="chart-box" style="display:none;" id="jitter-chartbox">
+        <div id="jitter-plot" class="plotly-chart"></div>
+        <div class="summary" id="jitter-summary"></div>
+        <a class="download" id="jitter-download" href="#" download style="display:none;">Download log</a>
+        <div id="jitter-warning" class="warning"></div>
+      </div>
+    </div>
+  </div>
+<script>
+// Cyclictest toggle UI
+let mode = 'quick';
+document.getElementById('cyclic-mode').onchange = function() {
+  mode = this.value;
+  document.getElementById('cyclic-detail-extra').style.display = (mode === 'detail') ? '' : 'none';
+};
+document.getElementById('cyclic-form').onsubmit = async e => {
+  e.preventDefault();
+  let status = document.getElementById('cyclic-status');
+  let chartbox = document.getElementById('cyclic-chartbox');
+  let summary = document.getElementById('cyclic-summary');
+  let download = document.getElementById('cyclic-download');
+  chartbox.style.display = 'none'; summary.innerHTML = ''; download.style.display = 'none';
+  status.innerText = 'Running, please wait...';
+  let params = {
+    cores: document.getElementById('cyclic-cores').value,
+    interval: document.getElementById('cyclic-interval').value,
+    loops: document.getElementById('cyclic-loops').value,
+    priority: document.getElementById('cyclic-priority').value,
+    policy: document.getElementById('cyclic-policy')?.value,
+    histogram: document.getElementById('cyclic-histogram')?.value,
+    threads: document.getElementById('cyclic-threads')?.value
+  };
+  let res = await fetch('/test', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testType:'cyclictest', mode, params })
+  });
+  let data = await res.json();
+  if (!data.mode) { status.innerText = 'Error: ' + (data.error || 'Unknown'); return; }
+  chartbox.style.display = 'block';
+  if (data.mode === 'cyclic-quick') {
+    summary.innerHTML = `<h3 style="color:#2ccfa7;">Result (Min/Avg/Max):</h3>
+      <table><tr><th>Core</th><th>Min</th><th>Avg</th><th>Max</th></tr>${
+        Object.entries(data.summary).map(([core, val]) =>
+          `<tr><td>${core}</td><td>${val.min}</td><td>${val.avg}</td><td>${val.max}</td></tr>`).join('')
+      }</table>`;
+    download.href = '/log?type=cyclictest';
+  } else {
+    summary.innerHTML = `<h3 style="color:#2ccfa7;">Result (Min/Avg/Max):</h3>
+      <table><tr><th>Core</th><th>Min</th><th>Avg</th><th>Max</th></tr>${
+        data.summary.map(val =>
+          `<tr><td>${val.core}</td><td>${val.min}</td><td>${val.avg}</td><td>${val.max}</td></tr>`).join('')
+      }</table>`;
+    download.href = '/log?type=cyclictest&mode=detail';
+  }
+  download.innerText = 'Download log';
+  download.style.display = 'inline-block';
+  status.innerText = '';
+};
 
+// Jitterdebugger plotting with Plotly.js (no Zoom main)
+let plotlyChart;
+async function runJitterForm() {
+  let status = document.getElementById('jitter-status');
+  let chartbox = document.getElementById('jitter-chartbox');
+  let summary = document.getElementById('jitter-summary');
+  let download = document.getElementById('jitter-download');
+  let warning = document.getElementById('jitter-warning');
+  let plotdiv = document.getElementById('jitter-plot');
+  chartbox.style.display = 'none'; summary.innerHTML = ''; download.style.display = 'none'; warning.innerHTML = '';
+  status.innerText = 'Running, please wait...';
+  let params = {
+    cores: document.getElementById('jitter-cores').value,
+    loops: document.getElementById('jitter-loops').value
+  };
+  let chartType = document.getElementById('jitter-chart-type').value;
+  let field = document.getElementById('jitter-field').value;
+  let res = await fetch('/test', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testType:'jitterdebugger', params })
+  });
+  let data = await res.json();
+  if (!data.mode) { status.innerText = 'Error: ' + (data.error || 'Unknown'); return; }
+  chartbox.style.display = 'block';
+
+  // Prepare data: trend plot (each core, block-by-block)
+  let blocks = data.blocks;
+  let valuesPerCore = {};
+  Object.entries(blocks).forEach(([core, arr]) => {
+    valuesPerCore[core] = arr.map(x => Number(x[field])).filter(x => !isNaN(x));
+  });
+
+  // -- Trend plot (always raw data, no spike filter) --
+  if (chartType === 'trend') {
+    let traces = [];
+    Object.entries(valuesPerCore).forEach(([core, arr], idx) => {
+      traces.push({
+        x: arr.map((_,i)=>i+1),
+        y: arr,
+        type:'scatter', mode:'lines+markers', name: `Core ${core}`,
+        line: { color: `hsl(${(idx*80)%360},80%,58%)`, width:2 },
+        connectgaps: false,
+        marker: { size:5 }
+      });
+    });
+    Plotly.newPlot(plotdiv, traces, {
+      title: `Block-by-block trend (${field})`,
+      yaxis: { title: `${field} (µs)`, rangemode:'tozero' },
+      xaxis: { title: 'Block', automargin:true },
+      margin: { t:42, l:55, r:12, b:58 }, legend: { orientation: "h" }
+    }, {responsive:true});
+  }
+  // Histogram (always all values, no spike filter)
+  else if (chartType === 'histogram') {
+    let plots = [];
+    Object.entries(valuesPerCore).forEach(([core, arr], idx) => {
+      if (!arr.length) return;
+      let binCount = 20;
+      let min = Math.min(...arr), max = Math.max(...arr, 1);
+      let binWidth = Math.ceil((max-min)/binCount);
+      let binEdges = Array.from({length:binCount+1},(_,i)=>min+i*binWidth);
+      let bins = Array(binCount).fill(0);
+      arr.forEach(v=>{
+        let idx = Math.min(binCount-1, Math.floor((v-min)/binWidth));
+        bins[idx]++;
+      });
+      let binLabels = Array.from({length:binCount},(_,i)=>`${binEdges[i]}~${binEdges[i+1]-1}`);
+      plots.push({
+        x: binLabels,
+        y: bins,
+        type:'bar',
+        name: `Core ${core}`,
+        marker: { color: `hsl(${(idx*80)%360},80%,62%)` },
+        yaxis: 'y', opacity: 0.90
+      });
+    });
+    Plotly.newPlot(plotdiv, plots, {
+      barmode: 'group',
+      title: `Histogram (field: ${field}, all values)`,
+      yaxis: { type:'linear', title:'Count', automargin:true, rangemode:'nonnegative' },
+      xaxis: { title: 'Bin (µs)', automargin:true, tickangle: -20 },
+      margin: { t:42, l:55, r:12, b:58 }, legend: { orientation: "h" }
+    }, {responsive:true});
+  }
+  // Boxplot (all values)
+  else if (chartType === 'boxplot') {
+    let traces = [];
+    Object.entries(valuesPerCore).forEach(([core, arr], idx) => {
+      traces.push({
+        y: arr,
+        type: 'box',
+        name: `Core ${core}`,
+        boxpoints: 'outliers',
+        marker: { color: `hsl(${(idx*80)%360},80%,58%)` }
+      });
+    });
+    Plotly.newPlot(plotdiv, traces, {
+      title: `Boxplot (${field})`,
+      yaxis: { title: `${field} (µs)`, rangemode:'tozero' },
+      margin: { t:38, l:55, r:12, b:54 },
+      legend: { orientation: "h" }
+    }, {responsive:true});
+  }
+
+  // summary table, warning for spike (ALWAYS compute from full array, not backend summary!)
+  let summaryRows = '';
+  let spikeThreshold = 1000;
+  let spike = false;
+  Object.entries(valuesPerCore).forEach(([core, arr]) => {
+    if (!arr.length) return;
+    let min = Math.min(...arr);
+    let avg = (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2);
+    let max = Math.max(...arr);
+    if (max >= spikeThreshold) spike = true;
+    summaryRows += `<tr><td>${core}</td><td>${arr.length}</td><td>${min}</td><td>${avg}</td><td>${max}</td></tr>`;
+  });
+  summary.innerHTML = `<h3 style="color:#2ccfa7;">Summary (${field}):</h3>
+    <table><tr><th>Core</th><th>Blocks</th><th>Min</th><th>Avg</th><th>Max</th></tr>${summaryRows}</table>`;
+  if (spike)
+    warning.innerHTML = `Warning: Latency spike detected! (max ≥ 1000 µs, see trend plot)`;
+  else
+    warning.innerHTML = "";
+  download.href = '/log?type=jitterdebugger';
+  download.innerText = 'Download log';
+  download.style.display = 'inline-block';
+  status.innerText = '';
+}
+
+document.getElementById('jitter-form').onsubmit = function(e) {
+  e.preventDefault(); runJitterForm();
+};
+</script>
+</body>
+</html>
