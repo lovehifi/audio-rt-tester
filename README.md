@@ -18,7 +18,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
      uname -a
      # → Linux volumio 6.12.xx-volumio-rt PREEMPT_RT ...
      ```  
-     **Must** show `PREEMPT_RT`, not `PREEMPT_DYNAMIC` or unpatched.
+     **Must** show `PREEMPT_RT`, not `PREEMPT_DYNAMIC`.
 
 
 ## Installation
