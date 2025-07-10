@@ -16,7 +16,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
   3. Reboot into your new kernel and verify:  
      ```bash
      uname -a
-     # → Linux volumio 6.12.36-volumio-1 #1 SMP PREEMPT_RT ...
+     # → Linux volumio 6.12.xx-volumio-rt PREEMPT_RT ...
      ```  
      **Must** show `PREEMPT_RT`, not `PREEMPT_DYNAMIC` or unpatched.
 
