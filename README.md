@@ -4,8 +4,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
 
 ## Prerequisites
 
-- Volumio (any recent release)  
-- Node.js (v18 or newer)  
+- Volumio
 - Git
 
 ## Installation
