@@ -6,7 +6,7 @@ A simple web-based GUI for running real-time audio latency tests on your Volumio
 
 ## Prerequisites
 
-- **Volumio with real-time kernel**  
+**Volumio with real-time kernel**  
   1. Clone Volumio’s build scripts and platform repo:  
      ```bash
      git clone https://github.com/volumio/build-platform-x64.git
